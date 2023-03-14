@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -18,17 +19,17 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	url_path := r.URL.Path
+	urlPath := r.URL.Path
 	//fmt.Printf("Current path: %s\n", url_path)
 	if r.Method == "GET" {
-		if strings.HasSuffix(url_path, "/") {
+		if strings.HasSuffix(urlPath, "/") {
 			//http.ServeFile(w, r, "static/upload.html")
-			files := getListOfFiles(url_path)
+			files := getListOfFiles(urlPath)
 			var listFilesHtml string
 			listFilesHtml = "<div style='white-space: nowrap;'>"
 			listFilesHtml += "<a class='col' href='../'>../</a> <br>"
 			for _, file := range files {
-				listFilesHtml += fmt.Sprintf("<a class='col' href='%s'> %s </a> <span class='col'>123 KB</span> <span class='col'>2022-03-04 11:11:11</span><br>", file.filename, file.filename)
+				listFilesHtml += fmt.Sprintf("<a class='col' style='width: 50%%' href='%s'> %s </a> <span class='col'>123 KB</span> <span class='col'>2022-03-04 11:11:11</span><br>", file.filename, file.filename)
 			}
 			listFilesHtml += "</div>"
 
@@ -38,23 +39,30 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			  <style>
 			  .col {
 				  display: inline-block;
-				  width: 33.33%%;
+				  width: 25%%;
 				  box-sizing: border-box;
 				  margin: 0;
-				  padding: 10px;
+				  padding: 2px;
+				  font-size: larger;
+				}
+				input[type="file"] {
+				  font-size: 18px;
+				  width: 45vw;
 				}
 			  </style>
 			</head>
 			<body>
 				%s
+				<br><br>
 			  <form method="post" enctype="multipart/form-data">
 			    <input type="file" name="files" multiple>
-			    <input type="submit">
+				 <br>
+				 <button style='margin-top: 1vw; width: 17vw;' type="submit">Upload</button>
 			  </form>
 			</body>
 			</html>`, listFilesHtml)
 		} else {
-			file, err := http.Dir(".").Open(url_path)
+			file, err := http.Dir(".").Open(urlPath)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("File error: %v", err), http.StatusInternalServerError)
 				return
@@ -62,12 +70,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			defer file.Close()
 
 			// Set the response headers to indicate that the response is a file
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", url_path[1:]))
+			urlParts := strings.Split(urlPath[1:], "/")
+			urlPath := urlParts[len(urlParts)-1]
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", urlPath))
 			w.Header().Set("Content-Type", "application/octet-stream")
 			//w.Header().Set("Content-Length", fmt.Sprintf("%d", ))
 
 			// Write the file to the response
-			http.ServeContent(w, r, url_path, time.Now(), file)
+			http.ServeContent(w, r, urlPath, time.Now(), file)
 		}
 	}
 
@@ -88,7 +98,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			defer f.Close()
 
-			file_path := path.Join(url_path[1:], file.Filename)
+			decodedFilename, err := url.QueryUnescape(file.Filename)
+			if err != nil {
+				fmt.Println("Error decoding filename:", err)
+				return
+			}
+			fmt.Println(decodedFilename)
+			file_path := path.Join(urlPath[1:], decodedFilename)
 			dst, err := os.Create(file_path) // create destination file for writing
 			if err != nil {
 				fmt.Fprintln(w, "Error creating file:", err)
@@ -109,7 +125,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", uploadHandler)
 	fmt.Println("Listening on :8000...")
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe("0.0.0.0:8000", nil)
 	//var dir string
 	//dir = "static"
 	//l := getListOfFiles(dir)
