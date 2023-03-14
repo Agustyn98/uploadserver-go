@@ -19,16 +19,16 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	url_path := r.URL.Path
-	fmt.Printf("Current path: %s\n", url_path)
+	//fmt.Printf("Current path: %s\n", url_path)
 	if r.Method == "GET" {
 		if strings.HasSuffix(url_path, "/") {
 			//http.ServeFile(w, r, "static/upload.html")
 			files := getListOfFiles(url_path)
 			var listFilesHtml string
-			listFilesHtml = "<div>"
-			listFilesHtml += "<a class='link' href='../'>../</a>"
+			listFilesHtml = "<div style='white-space: nowrap;'>"
+			listFilesHtml += "<a class='col' href='../'>../</a> <br>"
 			for _, file := range files {
-				listFilesHtml += fmt.Sprintf("<a class='link' href='%s'> %s </a>", file.filename, file.filename)
+				listFilesHtml += fmt.Sprintf("<a class='col' href='%s'> %s </a> <span class='col'>123 KB</span> <span class='col'>2022-03-04 11:11:11</span><br>", file.filename, file.filename)
 			}
 			listFilesHtml += "</div>"
 
@@ -36,9 +36,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			<head>
 			  <title>Upload</title>
 			  <style>
-			  .link {
-				display: inline-block;
-				width: 500px;
+			  .col {
+				  display: inline-block;
+				  width: 33.33%%;
+				  box-sizing: border-box;
+				  margin: 0;
+				  padding: 10px;
 				}
 			  </style>
 			</head>

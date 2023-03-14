@@ -17,7 +17,7 @@ type FileInfo struct {
 
 func getListOfFiles(web_path string) []FileInfo {
 
-	fmt.Printf("Getting files for dir: %s\n", web_path)
+	//fmt.Printf("Getting files for dir: %s\n", web_path)
 
 	currentDir, err := os.Getwd()
 	if err != nil {
