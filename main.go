@@ -11,25 +11,16 @@ import (
 	"time"
 )
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		return
-	}
-	fmt.Fprintf(w, "<html><head><title>Hello</title></head><body><h1>Hello, World!</h1></body></html>")
-}
-
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	urlPath := r.URL.Path
-	//fmt.Printf("Current path: %s\n", url_path)
 	if r.Method == "GET" {
 		if strings.HasSuffix(urlPath, "/") {
-			//http.ServeFile(w, r, "static/upload.html")
 			files := getListOfFiles(urlPath)
 			var listFilesHtml string
 			listFilesHtml = "<div style='white-space: nowrap;'>"
 			listFilesHtml += "<a class='col' href='../'>../</a> <br>"
 			for _, file := range files {
-				listFilesHtml += fmt.Sprintf("<a class='col' style='width: 50%%' href='%s'> %s </a> <span class='col'>123 KB</span> <span class='col'>2022-03-04 11:11:11</span><br>", file.filename, file.filename)
+				listFilesHtml += fmt.Sprintf("<a class='col' style='width: 50%%' href='%s'> %s </a> <span class='col'>%s</span> <span class='col'>%s</span><br>", file.filename, file.filename, file.formatSize(), file.lastMod)
 			}
 			listFilesHtml += "</div>"
 
@@ -69,12 +60,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			defer file.Close()
 
-			// Set the response headers to indicate that the response is a file
 			urlParts := strings.Split(urlPath[1:], "/")
 			urlPath := urlParts[len(urlParts)-1]
 			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", urlPath))
 			w.Header().Set("Content-Type", "application/octet-stream")
-			//w.Header().Set("Content-Length", fmt.Sprintf("%d", ))
 
 			// Write the file to the response
 			http.ServeContent(w, r, urlPath, time.Now(), file)
@@ -83,7 +72,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		//r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // limit request body size to 10 MB
-		err := r.ParseMultipartForm(10 << 20) // parse form data
+		err := r.ParseMultipartForm(10 << 22) // parse form data
 		if err != nil {
 			fmt.Fprintln(w, "Error parsing form data:", err)
 			return
@@ -126,11 +115,4 @@ func main() {
 	http.HandleFunc("/", uploadHandler)
 	fmt.Println("Listening on :8000...")
 	http.ListenAndServe("0.0.0.0:8000", nil)
-	//var dir string
-	//dir = "static"
-	//l := getListOfFiles(dir)
-	//for _, file := range l {
-	//	fmt.Println(file.filename)
-	//}
-
 }

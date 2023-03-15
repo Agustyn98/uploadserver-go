@@ -8,16 +8,31 @@ import (
 )
 
 type FileInfo struct {
-	filePath string
 	filename string
 	size     int64
 	lastMod  string
-	isDir    bool
+}
+
+func (f FileInfo) formatSize() string {
+	size := float64(f.size)
+	if size <= -1 {
+		return "-"
+	}
+	if size < 1024 {
+		return fmt.Sprintf("%.0f B", size)
+	}
+
+	units := []string{"", "KB", "MB", "GB", "TB"}
+	for _, unit := range units {
+		if size < 1024.0 {
+			return fmt.Sprintf("%.2f %s", size, unit)
+		}
+		size /= 1024.0
+	}
+	return "?"
 }
 
 func getListOfFiles(web_path string) []FileInfo {
-
-	//fmt.Printf("Getting files for dir: %s\n", web_path)
 
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -26,9 +41,6 @@ func getListOfFiles(web_path string) []FileInfo {
 	}
 
 	dir := path.Join(currentDir, web_path)
-
-	//fmt.Println("Current directory:", currentDir)
-	//fmt.Println("Full path:", dir)
 
 	// ReadDir reads the named directory
 	entries, err := os.ReadDir(dir)
@@ -45,19 +57,19 @@ func getListOfFiles(web_path string) []FileInfo {
 			log.Fatal(err)
 		}
 
-		// Print the file name, date and size
-		//fmt.Printf("%s - %s - %d bytes\n - %t", entry.Name(), info.ModTime(), info.Size(), info.IsDir())
 		var filename_dir string
+		var size int64
 		if entry.IsDir() {
 			filename_dir = entry.Name() + "/"
+			size = -1
 		} else {
 			filename_dir = entry.Name()
+			size = info.Size()
 		}
-		files = append(files, FileInfo{filePath: entry.Name(),
+		files = append(files, FileInfo{
 			filename: filename_dir,
-			size:     info.Size(),
+			size:     size,
 			lastMod:  info.ModTime().Format("2006-01-02 15:04:05"),
-			isDir:    info.IsDir(),
 		})
 	}
 	return files
