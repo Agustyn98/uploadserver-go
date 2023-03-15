@@ -113,6 +113,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", uploadHandler)
-	fmt.Println("Listening on :8000...")
-	http.ListenAndServe("0.0.0.0:8000", nil)
+
+	var port string
+	if len(os.Args) < 2 {
+		port = "8000"
+	} else {
+		port = os.Args[1]
+	}
+	fmt.Println("Listening on :" + port)
+	http.ListenAndServe("0.0.0.0:"+port, nil)
 }
