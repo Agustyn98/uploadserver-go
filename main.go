@@ -45,8 +45,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			<body>
 				%s
 				<br><br>
+			  <form method="post">
+			    <input type="text" name="dirName" multiple>
+				<input type="hidden" name="form_id" value="folder">
+				 <br>
+				 <button style='margin-top: 1vw; width: 17vw;' type="submit">Create folder</button>
+			  </form>
+				<br><br>
 			  <form method="post" enctype="multipart/form-data">
 			    <input type="file" name="files" multiple>
+				<input type="hidden" name="form_id" value="files">
 				 <br>
 				 <button style='margin-top: 1vw; width: 17vw;' type="submit">Upload</button>
 			  </form>
@@ -71,44 +79,56 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		//r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // limit request body size to 10 MB
-		err := r.ParseMultipartForm(10 << 22) // parse form data
-		if err != nil {
-			fmt.Fprintln(w, "Error parsing form data:", err)
-			return
-		}
-
-		files := r.MultipartForm.File["files"] // get files from form data
-		for _, file := range files {           // iterate over files
-			f, err := file.Open() // open file for reading
+		formID := r.FormValue("form_id")
+		fmt.Printf("Value of form: " + formID)
+		if formID == "folder" {
+			err := os.Mkdir("hello", 0755)
 			if err != nil {
-				fmt.Fprintln(w, "Error opening file:", err)
-				continue
-			}
-			defer f.Close()
-
-			decodedFilename, err := url.QueryUnescape(file.Filename)
-			if err != nil {
-				fmt.Println("Error decoding filename:", err)
+				fmt.Println("Error creating directory:", err)
 				return
 			}
-			fmt.Println(decodedFilename)
-			file_path := path.Join(urlPath[1:], decodedFilename)
-			dst, err := os.Create(file_path) // create destination file for writing
-			if err != nil {
-				fmt.Fprintln(w, "Error creating file:", err)
-				continue
-			}
-			defer dst.Close()
 
-			nBytes, err := io.Copy(dst, f) // copy bytes from source to destination
+		} else {
+
+			//r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // limit request body size to 10 MB
+			err := r.ParseMultipartForm(10 << 22) // parse form data
 			if err != nil {
-				fmt.Fprintln(w, "Error copying file:", err)
-				continue
+				fmt.Fprintln(w, "Error parsing form data:", err)
+				return
 			}
-			fmt.Printf("File %s uploaded successfully with %d bytes\n", file.Filename, nBytes)
-			http.Redirect(w, r, urlPath, http.StatusSeeOther)
+
+			files := r.MultipartForm.File["files"] // get files from form data
+			for _, file := range files {           // iterate over files
+				f, err := file.Open() // open file for reading
+				if err != nil {
+					fmt.Fprintln(w, "Error opening file:", err)
+					continue
+				}
+				defer f.Close()
+
+				decodedFilename, err := url.QueryUnescape(file.Filename)
+				if err != nil {
+					fmt.Println("Error decoding filename:", err)
+					return
+				}
+				fmt.Println(decodedFilename)
+				file_path := path.Join(urlPath[1:], decodedFilename)
+				dst, err := os.Create(file_path) // create destination file for writing
+				if err != nil {
+					fmt.Fprintln(w, "Error creating file:", err)
+					continue
+				}
+				defer dst.Close()
+
+				nBytes, err := io.Copy(dst, f) // copy bytes from source to destination
+				if err != nil {
+					fmt.Fprintln(w, "Error copying file:", err)
+					continue
+				}
+				fmt.Printf("File %s uploaded successfully with %d bytes\n", file.Filename, nBytes)
+			}
 		}
+		http.Redirect(w, r, urlPath, http.StatusSeeOther)
 	}
 }
 
