@@ -82,10 +82,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		formID := r.FormValue("form_id")
 		fmt.Printf("Value of form: " + formID)
 		if formID == "folder" {
-			err := os.Mkdir("hello", 0755)
-			if err != nil {
-				fmt.Println("Error creating directory:", err)
-				return
+			r.ParseForm()
+			value := r.FormValue("dirName")
+			if len(value) > 0 {
+				err := os.Mkdir(value, 0755)
+				if err != nil {
+					fmt.Println("Error creating directory: ", err)
+					return
+				}
 			}
 
 		} else {
