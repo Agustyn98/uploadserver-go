@@ -66,11 +66,18 @@ func getListOfFiles(web_path string) []FileInfo {
 			filename_dir = entry.Name()
 			size = info.Size()
 		}
-		files = append(files, FileInfo{
+
+		newEntry := FileInfo{
 			filename: filename_dir,
 			size:     size,
 			lastMod:  info.ModTime().Format("2006-01-02 15:04:05"),
-		})
+		}
+
+		if entry.IsDir() {
+			files = append([]FileInfo{newEntry}, files...)
+		} else {
+			files = append(files, newEntry)
+		}
 	}
 	return files
 }

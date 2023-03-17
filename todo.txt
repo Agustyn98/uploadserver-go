@@ -1,4 +1,2 @@
 create folders
-folders listed first
 file uploaded redirect to site
-choose sort order

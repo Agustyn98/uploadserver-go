@@ -106,7 +106,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "Error copying file:", err)
 				continue
 			}
-			fmt.Fprintf(w, "File %s uploaded successfully with %d bytes\n", file.Filename, nBytes)
+			fmt.Printf("File %s uploaded successfully with %d bytes\n", file.Filename, nBytes)
+			http.Redirect(w, r, urlPath, http.StatusSeeOther)
 		}
 	}
 }
