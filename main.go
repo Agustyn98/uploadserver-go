@@ -13,6 +13,10 @@ import (
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	urlPath := r.URL.Path
+	ip := r.RemoteAddr
+	method := r.Method
+	request := r.URL.Path
+	fmt.Printf("Request from %s: %s %s\n", ip, method, request)
 	if r.Method == "GET" {
 		if strings.HasSuffix(urlPath, "/") {
 			files := getListOfFiles(urlPath)
@@ -88,7 +92,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		formID := r.FormValue("form_id")
-		fmt.Printf("Value of form: " + formID)
 		if formID == "folder" {
 			r.ParseForm()
 			value := r.FormValue("dirName")
