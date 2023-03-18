@@ -159,6 +159,6 @@ func main() {
 	fmt.Printf("Listening on %s:%s", getIp(), port)
 	err := http.ListenAndServe("0.0.0.0:"+port, nil)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		fmt.Printf("\nError: %s", err)
 	}
 }
