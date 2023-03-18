@@ -20,7 +20,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			listFilesHtml = "<div style='white-space: nowrap;'>"
 			listFilesHtml += "<a class='col' href='../'>../</a> <br>"
 			for _, file := range files {
-				listFilesHtml += fmt.Sprintf("<a class='col' style='width: 50%%' href='%s'> %s </a> <span class='col'>%s</span> <span class='col'>%s</span><br>", file.filename, file.filename, file.formatSize(), file.lastMod)
+				listFilesHtml += fmt.Sprintf("<a class='col' style='width: 50%%;' href='%s'> %s </a> <span class='col'>%s</span> <span class='col'>%s</span><br>", file.filename, file.filename, file.formatSize(), file.lastMod)
 			}
 			listFilesHtml += "</div>"
 
@@ -35,16 +35,23 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				  margin: 0;
 				  padding: 2px;
 				  font-size: larger;
+				  overflow: hidden;
+				  word-wrap: break-word;
 				}
 				input[type="file"] {
 				  font-size: 18px;
 				  width: 45vw;
+				}
+				input[type="text"] {
+				  font-size: 18px;
+				  width: 15vw;
 				}
 			  </style>
 			</head>
 			<body>
 				%s
 				<br><br>
+			<div style="display: flex; gap: 30px;">
 			  <form method="post">
 			    <input type="text" name="dirName" multiple>
 				<input type="hidden" name="form_id" value="folder">
@@ -58,6 +65,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				 <br>
 				 <button style='margin-top: 1vw; width: 17vw;' type="submit">Upload</button>
 			  </form>
+			</div>
 			</body>
 			</html>`, listFilesHtml)
 		} else {
