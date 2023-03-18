@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path"
 )
@@ -80,4 +81,22 @@ func getListOfFiles(web_path string) []FileInfo {
 		}
 	}
 	return files
+}
+
+func getIp() string {
+	var ip string
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ip = ipnet.IP.String()
+				return ip
+			}
+		}
+	}
+	return ip
 }
