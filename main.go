@@ -157,5 +157,8 @@ func main() {
 		port = os.Args[1]
 	}
 	fmt.Println("Listening on :" + port)
-	http.ListenAndServe("0.0.0.0:"+port, nil)
+	err := http.ListenAndServe("0.0.0.0:"+port, nil)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+	}
 }
