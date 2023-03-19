@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -91,8 +90,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		formID := r.FormValue("form_id")
-		if formID == "folder" {
+		//fmt.Println("POST request")
+		//formID := r.FormValue("form_id")
+		//fmt.Println("choosing form:")
+		if false {
 			r.ParseForm()
 			value := r.FormValue("dirName")
 			dirPath := path.Join(urlPath, value)
@@ -106,44 +107,46 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 
-			//r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // limit request body size to 10 MB
-			err := r.ParseMultipartForm(10 << 22) // parse form data
+			sz := r.Header.Get("Content-Length")
+			fmt.Println(sz)
+			mr, err := r.MultipartReader()
 			if err != nil {
-				fmt.Fprintln(w, "Error parsing form data:", err)
+				fmt.Printf("\nmultipart reader erro %s", err)
 				return
 			}
-
-			files := r.MultipartForm.File["files"] // get files from form data
-			for _, file := range files {           // iterate over files
-				f, err := file.Open() // open file for reading
+			for {
+				part, err := mr.NextPart()
+				fmt.Println("reading next part")
+				if err == io.EOF {
+					break
+				}
+				var read int64
+				//var p float32
+				filePath := path.Join(urlPath, part.FileName())
+				fmt.Printf("\nopening part %s", filePath[1:])
+				dst, err := os.OpenFile(filePath[1:], os.O_WRONLY|os.O_CREATE, 0644)
 				if err != nil {
-					fmt.Fprintln(w, "Error opening file:", err)
+					fmt.Printf("\nError reading %s", err)
 					continue
 				}
-				defer f.Close()
-
-				decodedFilename, err := url.QueryUnescape(file.Filename)
-				if err != nil {
-					fmt.Println("Error decoding filename:", err)
-					return
+				fmt.Println("for loop")
+				for {
+					buffer := make([]byte, 1<<20)
+					cBytes, err := part.Read(buffer)
+					read = read + int64(cBytes)
+					//p = float32(read) / float32(part.Header.Get("Content-Length")) * 100
+					//fmt.Printf("progress: %v \n", p)
+					fmt.Printf("\nProgress: %d  /  %s ", read, part.Header.Get("Content-Length"))
+					fmt.Println(part.Header.Values("Content-Length"))
+					dst.Write(buffer[0:cBytes])
+					if err == io.EOF {
+						fmt.Printf("\nError when reading from buffer: %s\n", err)
+						break
+					}
 				}
-				fmt.Println(decodedFilename)
-				file_path := path.Join(urlPath[1:], decodedFilename)
-				dst, err := os.Create(file_path) // create destination file for writing
-				if err != nil {
-					fmt.Fprintln(w, "Error creating file:", err)
-					continue
-				}
-				defer dst.Close()
-
-				nBytes, err := io.Copy(dst, f) // copy bytes from source to destination
-				if err != nil {
-					fmt.Fprintln(w, "Error copying file:", err)
-					continue
-				}
-				fmt.Printf("File %s uploaded successfully with %d bytes\n", file.Filename, nBytes)
 			}
 		}
+
 		http.Redirect(w, r, urlPath, http.StatusSeeOther)
 	}
 }

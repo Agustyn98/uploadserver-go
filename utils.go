@@ -100,3 +100,20 @@ func getIp() string {
 	}
 	return ip
 }
+
+type progressWriter struct {
+	total    int64
+	current  int64
+	progress int
+}
+
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	n := len(p)
+	pw.current += int64(n)
+	newProgress := int(float64(pw.current) / float64(pw.total) * 100)
+	if newProgress != pw.progress {
+		pw.progress = newProgress
+		fmt.Printf("\r%d%% complete", pw.progress)
+	}
+	return n, nil
+}
