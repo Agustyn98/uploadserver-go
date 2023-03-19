@@ -95,8 +95,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if formID == "folder" {
 			r.ParseForm()
 			value := r.FormValue("dirName")
+			dirPath := path.Join(urlPath, value)
 			if len(value) > 0 {
-				err := os.Mkdir(value, 0755)
+				err := os.Mkdir(dirPath[1:], 0777)
 				if err != nil {
 					fmt.Println("Error creating directory: ", err)
 					return
