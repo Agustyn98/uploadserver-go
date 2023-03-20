@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 )
 
 type FileInfo struct {
@@ -94,7 +95,9 @@ func getIp() string {
 		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
 				ip = ipnet.IP.String()
-				return ip
+				if !strings.HasPrefix(ip, "169.254") {
+					return ip
+				}
 			}
 		}
 	}
